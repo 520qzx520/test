@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      function add() {
+        let args = [...arguments];
+
+        let inner = function () {
+          args.push(...arguments);
+          return inner;
+        };
+
+        inner.toString = function () {
+          return args.reduce((pre, cur) => {
+            return pre + cur;
+          }, 0);
+        };
+        return inner;
+      }
+
+      function add1() {
+        let args = [...arguments];
+        let inner = function () {
+          args.push(...arguments);
+
+          return inner;
+        };
+
+        inner.toString = function () {
+          args.reduce((pre, cur) => {
+            return pre + cur;
+          });
+         
+        };
+        return inner;
+      }
+
+      console.log(Number(add(1, 2)(3)(4)));
+      console.log(Number(add(1, 2)(3, 4)(5)));
+      console.log(Number(add(1, 2)(3)(4)(6, 7)));
+    </script>
+  </body>
+</html>

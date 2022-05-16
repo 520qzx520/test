@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      //call
+      Function.prototype.mycall = function (obj) {
+        // if (typeof obj !== 'Function') {
+        //   return ('error not function');
+        // }
+        obj = obj || window;
+        obj.fn = this;
+
+        let args = Array.from(arguments).splice(1);
+        let result = obj.fn(...args);
+        delete obj.fn;
+        return result;
+      };
+
+      //apply
+      Function.prototype.myapply = function (obj) {
+        obj = obj || window;
+        obj.fn = this;
+        let result;
+
+        if (arguments[1]) {
+          obj.fn(...arguments[1]);
+        } else {
+          obj.fn();
+        }
+
+        delete obj.fn;
+        return result;
+      };
+
+      //bind
+      Function.prototype.myBind = function(context){
+        let _this = this
+
+        let args = Array.prototype.splice.call(arguments,1)
+        return function F(){
+          if(this instanceof F){
+            return new _this(...args,...arguments)
+          }else{
+            return _this.apply(context, args.concat(...arguments))
+          }
+        }
+      }
+
+
+
+  //     function Person (name,age,height) {
+  //         this.name=name,
+  //         this.age = age,
+  //         this.height = height
+  //         this.say = function(){
+  //            console.log(`我叫${this.name}我今年${this.age}身高${this.height}`);
+  //         }
+           
+        
+  //       };
+
+  //       Person1 = {
+  //         name: 'Tom1',
+  //        age:999,
+  //        height:176
+  //       };
+  //     //   Person.say.mycall(Person1, 18); //我叫Tom1我今年18
+
+  //  let p = new  Person(12999,999,999999)
+  //  let pp =  p.say.myBind(Person1,99,9945)
+  //  new pp(33)
+  //   console.log(new p.say)
+    </script>
+  </body>
+</html>

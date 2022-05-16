@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      function deepClone(data) {
+        let result = {};
+        let loopList = [
+          {
+            parent: result,
+            key: undefined,
+            data: data,
+            type: undefined,
+          },
+        ];
+
+        while (loopList.length) {
+          let node = loopList.pop();
+          let { parent, key, data, type } = node;
+          let anoPar = parent;
+
+          if (typeof key !== 'undefined') {
+            if (type === 'obj') {
+              anoPar = parent[key] = {};
+            } else {
+              anoPar = parent[key] = [];
+            }
+          }
+
+          for (i in data) {
+            if (Object.prototype.toString.call(data[i]) === '[object Array]') {
+              loopList.push({
+                parent: anoPar,
+                key: i,
+                data: data[i],
+                type: 'arr',
+              });
+            } else if (
+              Object.prototype.toString.call(data[i]) === '[object Object]'
+            ) {
+              loopList.push({
+                parent: anoPar,
+                key: i,
+                data: data[i],
+                type: 'obj',
+              }); 
+            } else {
+              anoPar[i] = data[i];
+            }
+          }
+        }
+        console.log(result);
+        return result;
+      }
+
+      var a1 = {
+        a: 1,
+        b: 2,
+        c: {
+          c1: 3,
+          c2: {
+            c21: 4,
+            c22: 5,
+            c23: [2, 3, 4, 5],
+          },
+        },
+        d: 'asd',
+        k: [1, 2, 3, 4],
+        l: [1, 3, 4, 5, 6],
+      };
+      deepClone(a1);
+    </script>
+  </body>
+</html>

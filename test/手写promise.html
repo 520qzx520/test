@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      class Promise {
+        constructor(executer) {
+          this.state = 'pending'; //初始化状态
+          this.value = ''; // 记录成功回调的值
+          this.reason = ''; // 记录失败回调的值
+          this.onRejectedCallback = []; // 存放成功时执行的函数，处理异步
+          this.onResolvedCallback = []; // 存放失败时执行的函数，处理异步
+
+          let resolve = (value) => {
+            // 成功
+            if (this.state === 'pending') {
+              //   console.log('执行成功回调');
+              this.state = 'fulfilled';
+              this.value = value;
+              this.onResolvedCallback.forEach((fn) => {
+                fn();
+              });
+            }
+          };
+          //失败
+          let reject = (value) => {
+            if (this.state === 'pending') {
+              //   console.log('执行失败回调');
+              this.state = 'rejected';
+              this.reason = value;
+              this.onRejectedCallback.forEach((fn) => fn());
+            }
+          };
+          executer(resolve, reject);
+        }
+        //.then方法
+        then(onFulfilled, onRejected) {
+          //promise1 链式调用返回promise
+          let Promise1 = new Promise((resolve, reject) => {
+            onFulfilled =
+              typeof onFulfilled === 'function' ? onFulfilled : () => {};
+            onRejected =
+              typeof onRejected === 'function' ? onRejected : () => {};
+            //成功时调用
+            if (this.state === 'fulfilled') {
+              //等到 Promise1 执行完就调，因为用到了 Promise1
+              setTimeout(() => {
+                //成功 .then的回调
+                let resultCallback = onFulfilled(this.value);
+                /*
+              resultCallback 是 .then 的成功回调的返回值
+               -- 对 resultCallback 进行分析：
+               -- 1、 如果是普通值 就直接调用 resolve
+                  2、 如果是promise 对象 看promise是否成功 
+                      成功就resolve 失败就reject
+               ---- 封装一个函数 对 x 判断处理
+              */
+
+                // 作为下一个 promise 的参数,将返回值返回
+                //resolvePromise 是一个自己封装处理x 的函数
+                resolvePromise(resultCallback, resolve, reject, Promise1);
+              }, 0);
+            }
+            //失败时调用
+            if (this.state === 'rejected') {
+              onRejected(this.reason);
+            }
+            //处理异步
+            if (this.state === 'pending') {
+              //成功时执行的函数存起来
+              this.onResolvedCallback.push(() => {
+                onFulfilled(this.value);
+              });
+              //失败处理的函数存起来
+              this.onRejectedCallback.push(() => {
+                onRejected(this.reason);
+              });
+            }
+          });
+          return Promise1;
+        }
+      }
+
+      //处理链式调用不同情况
+      function resolvePromise(resultCallback, resolve, reject, Promise1) {
+        //处理循环引用
+        if (resultCallback === Promise1) {
+          return reject(new TypeError('不能自己then自己'));
+        }
+
+        //判断 resultCallback 是否是一个promise
+        if (resultCallback instanceof Promise) {
+          //是promise 就等他成功或失败
+          // resultCallback.then((value)=>{
+          //     resolve(value)
+          // },err=>{
+          //     reject(err)
+          // })
+
+          //代码优化
+          resultCallback.then(resolve, reject);
+        } else {
+          //普通值情况
+          resolve(resultCallback);
+        }
+      }
+
+      // promise 的四个静态方法 resolve reject race all
+      // -- 1、 resolve
+      Promise.resolve = function (value) {
+        return new Promise((resolve, reject) => {
+          resolve(value);
+        });
+      };
+
+      // 2、reject
+      Promise.reject = function (value) {
+        return new Promise((resolve, reject) => {
+          reject(value);
+        });
+      };
+
+      // 3、 race   // Promise.race([promise1,promise2,promise3]) 谁最快满足条件谁执行
+      Promise.race = function (promise) {
+        return new Promise((resolve, reject) => {
+          //遍历 谁最快满足条件谁执行
+          //简写
+          promise.forEach((fn) => fn.then(resolve, reject));
+          // for(let i = 0; i < promise.length; i++){
+          //     promise[i].then(resolve,reject)
+          // }
+
+          //等价
+          // promise.then((value)=>{
+          //     resolve(value)
+          // },err=>{
+          //     reject(err)
+          // })
+        });
+      };
+     
+      // 4、all 
+      Promise.all = function(promise){
+          
+          let arr = [] //存放结果
+          let i = 0    // 记录成功多少个，如果结果个数 和 promise.length 相等 则返回
+          function processData(index,data,resolve){
+            arr[index] = data
+             i++
+            if(i===arr.length){
+                resolve(arr)
+            }
+            
+          }
+          return new Promise((resolve,reject)=>{
+            promise.forEach((fn,index)=>{
+                fn.then(data=>{
+                    processData(index,data,resolve)
+                   
+                },reject)
+            })
+
+          })
+      }
+     
+     
+      //测试 resolve
+      // Promise.resolve(520).then(data=>{
+      //     console.log(data)
+      // })
+
+      // 测试 reject
+      // Promise.reject(666).then(data=>{
+      //     console.log(data)
+      // },err =>{
+      //     console.log(err)
+      // })
+
+      // 测试 race
+      //   const p1 = new Promise((resolve, reject) => {
+      //     setTimeout(() => {
+      //       resolve(1);
+      //     }, 6000);
+      //   });
+
+      //   const p2 = new Promise((resolve, reject) => {
+      //     setTimeout(() => {
+      //       resolve(2);
+      //     }, 2000);
+      //   });
+
+      //   const p3 = new Promise((resolve, reject) => {
+      //     setTimeout(() => {
+      //       resolve(3);
+      //     }, 3000);
+      //   });
+      //   Promise.race([p1, p2, p3]).then((value) => {
+      //     console.log(value);
+      //   });
+
+        //测试 all
+        const p1 = new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve(100);
+          }, 3000);
+        });
+
+        const p2 = new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve(200);
+          }, 2000);
+        });
+
+        const p3 = new Promise((resolve, reject) => {
+          setTimeout(() => {
+            resolve(300);
+          }, 1000);
+        });
+        Promise.all([p1, p2, p3]).then((value) => {
+          console.log(value);
+        });
+    </script>
+  </body>
+</html>

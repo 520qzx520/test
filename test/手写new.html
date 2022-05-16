@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      function myNew(fn, ...args) {
+        // 创建一个空对象
+        let obj = {}; // 使空对象的隐式原型指向原函数的显式原型
+        obj.__proto__ = fn.prototype;
+        // this指向obj
+        console.log(obj,fn)
+        let result = fn.apply(obj, args); // 返回
+      
+        return result instanceof Object ? result : obj;
+      }
+
+      function MyNew(fn,...args){
+          let obj = {}
+          obj.__proto__ = fn.prototype
+          console.log(obj,fn)
+          let result = fn.apply(obj, args)
+          return result instanceof Object ? result : obj
+      }
+    
+      let qzx = {
+          name: 'qzx',
+          say (name) {
+        name = name||this.name
+          console.log('I am ' + name );
+         
+        }
+      }
+      function Person(name, age) {
+        this.name = name;
+        this.age = age;
+        this.say = function () {
+          console.log('I am ' + this.name);
+         
+        }; 
+
+        return qzx
+      }
+
+      let person2 = MyNew(Person, 'Star', 20);
+      
+      person2.say('QZx');
+
+
+   
+    </script>
+  </body>
+</html>
